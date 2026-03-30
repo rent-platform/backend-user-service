@@ -1,0 +1,4 @@
+rootProject.name = 'user-service'
+
+include 'service'
+include 'database'

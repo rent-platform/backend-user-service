@@ -1,0 +1,16 @@
+.gradle/
+.idea/
+classes/
+build/
+out/
+*.iml
+
+# Secrets
+.env
+*.env
+application-secret.yaml
+
+log/
+*.log
+
+bin
