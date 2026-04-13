@@ -10,8 +10,10 @@ import ru.rentplatform.userservice.api.dto.request.*;
 import ru.rentplatform.userservice.api.dto.response.*;
 import ru.rentplatform.userservice.core.service.AuthService;
 
+import static ru.rentplatform.userservice.api.ApiPaths.AUTH;
+
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping(AUTH)
 @RequiredArgsConstructor
 @Validated
 public class AuthController {

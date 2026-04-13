@@ -36,10 +36,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public UserResponse register(RegisterRequest request) {
-        if (userRepository.existsByNicknameAndDeletedAtIsNull(request.getNickname())) {
-            throw new UserAlreadyExistsException("User with this nickname already exists");
-        }
-
         if (userRepository.existsByPhoneAndDeletedAtIsNull(request.getPhone())) {
             throw new UserAlreadyExistsException("User with this phone already exists");
         }
@@ -51,7 +47,6 @@ public class AuthServiceImpl implements AuthService {
         OffsetDateTime now = OffsetDateTime.now();
 
         User user = new User();
-        user.setId(UUID.randomUUID());
         user.setNickname(request.getNickname());
         user.setFullName(request.getNickname());
         user.setPhone(request.getPhone());
@@ -85,7 +80,6 @@ public class AuthServiceImpl implements AuthService {
         OffsetDateTime now = OffsetDateTime.now();
 
         Session session = new Session();
-        session.setId(UUID.randomUUID());
         session.setUserId(user.getId());
         session.setRefreshTokenHash(refreshTokenHash);
         session.setDeviceInfo(request.getDeviceInfo());
