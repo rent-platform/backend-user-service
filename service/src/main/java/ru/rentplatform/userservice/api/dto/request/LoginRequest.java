@@ -22,5 +22,6 @@ public class LoginRequest {
     @Size(min = 8, max = 255)
     private String password;
 
+    @Size(max = 255, message = "Device info must be at most 255 characters")
     private String deviceInfo;
 }
