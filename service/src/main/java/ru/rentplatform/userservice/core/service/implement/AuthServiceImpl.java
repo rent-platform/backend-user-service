@@ -7,30 +7,25 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.rentplatform.userservice.api.dto.request.*;
 import ru.rentplatform.userservice.api.dto.response.*;
 import ru.rentplatform.userservice.api.exception.*;
-import ru.rentplatform.userservice.config.JwtProperties;
 import ru.rentplatform.userservice.core.dao.entity.Session;
 import ru.rentplatform.userservice.core.dao.entity.User;
-import ru.rentplatform.userservice.core.dao.repository.SessionRepository;
 import ru.rentplatform.userservice.core.dao.repository.UserRepository;
 import ru.rentplatform.userservice.core.mapper.UserMapper;
 import ru.rentplatform.userservice.core.service.AuthService;
 import ru.rentplatform.userservice.core.service.JwtService;
+import ru.rentplatform.userservice.core.service.SessionService;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.OffsetDateTime;
-import java.util.HexFormat;
-import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
-    private final SessionRepository sessionRepository;
+    private final SessionService sessionService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final JwtProperties jwtProperties;
     private final UserMapper userMapper;
 
     @Override
@@ -62,7 +57,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public AuthResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request, String deviceInfo) {
+
         User user = findUserByLogin(request.getLogin());
 
         if (!Boolean.TRUE.equals(user.getIsActive())) {
@@ -73,20 +69,12 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidCredentialsException("Invalid login or password");
         }
 
+        String normalizeDeviceInfo = normalizeDeviceInfo(deviceInfo);
+
         String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken();
-        String refreshTokenHash = hashToken(refreshToken);
+        String refreshToken = sessionService.createSession(user.getId(), normalizeDeviceInfo);
 
         OffsetDateTime now = OffsetDateTime.now();
-
-        Session session = new Session();
-        session.setUserId(user.getId());
-        session.setRefreshTokenHash(refreshTokenHash);
-        session.setDeviceInfo(request.getDeviceInfo());
-        session.setCreatedAt(now);
-        session.setExpiresAt(now.plusSeconds(jwtProperties.getRefreshTokenExpirationSeconds()));
-
-        sessionRepository.save(session);
 
         user.setLastLoginAt(now);
         user.setUpdatedAt(now);
@@ -103,18 +91,15 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponse refresh(RefreshRequest request) {
-        String hash = hashToken(request.getRefreshToken());
 
-        Session session = sessionRepository.findByRefreshTokenHash(hash)
-                .orElseThrow(() -> new SessionNotFoundException("Session not found"));
+        Session session = sessionService.validateRefreshToken(request.getRefreshToken());
 
-        if (session.getRevokedAt() != null ||
-                session.getExpiresAt().isBefore(OffsetDateTime.now())) {
-            throw new SessionNotFoundException("Refresh token expired or revoked");
-        }
-
-        User user = userRepository.findById(session.getUserId())
+        User user = userRepository.findByIdAndDeletedAtIsNull(session.getUserId())
                 .orElseThrow(() -> new InvalidCredentialsException("User not found"));
+
+        if (!Boolean.TRUE.equals(user.getIsActive())) {
+            throw new InvalidCredentialsException("User account is inactive");
+        }
 
         String accessToken = jwtService.generateAccessToken(user);
 
@@ -129,20 +114,15 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public MessageResponse logout(LogoutRequest request) {
-        String hash = hashToken(request.getRefreshToken());
 
-        Session session = sessionRepository.findByRefreshTokenHash(hash)
-                .orElseThrow(() -> new SessionNotFoundException("Session not found"));
-
-        session.setRevokedAt(OffsetDateTime.now());
-        sessionRepository.save(session);
-
+        sessionService.revokeByRefreshToken(request.getRefreshToken());
         return MessageResponse.builder()
                 .message("Logged out successfully")
                 .build();
     }
 
     private User findUserByLogin(String login) {
+
         if (isEmail(login)) {
             return userRepository.findByEmailAndDeletedAtIsNull(login)
                     .orElseThrow(() -> new InvalidCredentialsException("Invalid login or password"));
@@ -155,13 +135,17 @@ public class AuthServiceImpl implements AuthService {
         return value != null && value.contains("@");
     }
 
-    private String hashToken(String token) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash);
-        } catch (Exception ex) {
-            throw new RuntimeException("Failed to hash token", ex);
+    private String normalizeDeviceInfo(String deviceInfo) {
+        if (deviceInfo == null) {
+            return null;
         }
+
+        String trimmed = deviceInfo.trim();
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+
+        return trimmed.length() > 255 ? trimmed.substring(0, 255) : trimmed;
     }
+
 }

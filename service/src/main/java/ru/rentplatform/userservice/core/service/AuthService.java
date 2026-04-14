@@ -12,7 +12,7 @@ public interface AuthService {
 
     UserResponse register(RegisterRequest request);
 
-    AuthResponse login(LoginRequest request);
+    AuthResponse login(LoginRequest request, String deviceInfo);
 
     AuthResponse refresh(RefreshRequest request);
 

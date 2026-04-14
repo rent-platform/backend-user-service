@@ -1,6 +1,5 @@
 package ru.rentplatform.userservice.api.dto.request;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -21,7 +20,4 @@ public class LoginRequest {
     @NotBlank
     @Size(min = 8, max = 255)
     private String password;
-
-    @Size(max = 255, message = "Device info must be at most 255 characters")
-    private String deviceInfo;
 }

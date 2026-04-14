@@ -17,4 +17,6 @@ public interface SessionRepository extends JpaRepository<Session, UUID> {
     List<Session> findAllByRevokedAtBefore(OffsetDateTime revokedAt);
 
     List<Session> findAllByUserId(UUID userId);
+
+    List<Session> findAllByUserIdAndRevokedAtIsNull(UUID userId);
 }

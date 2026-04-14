@@ -17,10 +17,9 @@ public class RegisterRequest {
 
     @NotBlank
     @Pattern(
-            regexp = "^\\+?[0-9]{11}$",
-            message = "Phone must contain only digits and may start with +"
+            regexp = "^\\+?[1-9][0-9]{10}$",
+            message = "Phone must contain 11 digits, may start with +, and cannot start with 0"
     )
-    @Size(max = 11, message = "Phone must be at most 11 characters")
     private String phone;
 
     @NotBlank
