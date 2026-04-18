@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: user-service
+
+  datasource:
+    url: jdbc:postgresql://${PG_HOST:localhost}:${PG_PORT:5433}/${PG_DATABASE:user_db}
+    username: ${PG_USER:postgres}
+    password: ${PG_PASSWORD:12345}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+  flyway:
+    enabled: true
+    locations: filesystem:database/migrations
+
+app:
+  session:
+    cleanup:
+      delay-ms: 600000
+      revoked-retention-days: 7
+
+  swagger:
+    gateway-url: http://localhost:8080
+    user-service-url: http://localhost:8081
+
+security:
+  jwt:
+    access-token-expiration-seconds: 900
+    refresh-token-short-expiration-seconds: 86400
+    refresh-token-remember-me-expiration-seconds: 2592000
+      
+server:
+  port: 8081

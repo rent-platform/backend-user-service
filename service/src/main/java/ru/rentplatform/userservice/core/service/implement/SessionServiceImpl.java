@@ -73,6 +73,14 @@ public class SessionServiceImpl implements SessionService {
         Session session = sessionRepository.findByRefreshTokenHash(hash)
                 .orElseThrow(() -> new SessionNotFoundException("Session not found"));
 
+        if (session.getRevokedAt() != null) {
+            throw new SessionNotFoundException("Refresh token already revoked");
+        }
+
+        if (session.getExpiresAt().isBefore(OffsetDateTime.now())) {
+            throw new SessionNotFoundException("Refresh token expired");
+        }
+
         session.setRevokedAt(OffsetDateTime.now());
         sessionRepository.save(session);
     }
