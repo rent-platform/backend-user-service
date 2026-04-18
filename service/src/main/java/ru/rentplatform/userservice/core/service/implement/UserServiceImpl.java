@@ -1,13 +1,17 @@
 package ru.rentplatform.userservice.core.service.implement;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.rentplatform.userservice.api.dto.request.ChangePasswordRequest;
 import ru.rentplatform.userservice.api.dto.request.UpdateProfileRequest;
 import ru.rentplatform.userservice.api.dto.response.MessageResponse;
 import ru.rentplatform.userservice.api.dto.response.UserResponse;
 import ru.rentplatform.userservice.api.exception.AccessDeniedException;
 import ru.rentplatform.userservice.api.exception.EmailAlreadyExistsException;
+import ru.rentplatform.userservice.api.exception.InvalidCredentialsException;
+import ru.rentplatform.userservice.config.PasswordConfig;
 import ru.rentplatform.userservice.core.dao.entity.User;
 import ru.rentplatform.userservice.core.dao.repository.UserRepository;
 import ru.rentplatform.userservice.core.mapper.UserMapper;
@@ -23,6 +27,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final SessionService sessionService;
+    private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
     @Override
@@ -90,6 +95,34 @@ public class UserServiceImpl implements UserService {
         sessionService.revokeAllUserSessions(userId);
 
         return new MessageResponse("User deleted successfully");
+    }
+
+    @Override
+    @Transactional
+    public MessageResponse changePassword(UUID userId, ChangePasswordRequest request) {
+
+        User user = userRepository.findByIdAndDeletedAtIsNull(userId)
+                .orElseThrow(() -> new AccessDeniedException("User not found"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new InvalidCredentialsException("Current password is incorrect");
+        }
+
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            throw new InvalidCredentialsException("Passwords do not match");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+            throw new InvalidCredentialsException("New password must be different from current password");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        user.setUpdatedAt(OffsetDateTime.now());
+        userRepository.save(user);
+
+        sessionService.revokeAllUserSessions(userId);
+
+        return new MessageResponse("Password changed successfully. Please login again");
     }
 
 

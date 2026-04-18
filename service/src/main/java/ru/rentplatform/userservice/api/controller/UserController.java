@@ -7,6 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.rentplatform.userservice.api.dto.request.ChangePasswordRequest;
 import ru.rentplatform.userservice.api.dto.request.UpdateProfileRequest;
 import ru.rentplatform.userservice.api.dto.response.MessageResponse;
 import ru.rentplatform.userservice.api.dto.response.UserResponse;
@@ -48,6 +49,13 @@ public class UserController {
     public MessageResponse deleteMe(@AuthenticationPrincipal Jwt jwt) {
         UUID userId = UUID.fromString(jwt.getSubject());
         return userService.deleteCurrentUser(userId);
+    }
+
+    @PutMapping("/me/password")
+    public MessageResponse changePassword(@AuthenticationPrincipal Jwt jwt,
+                                          @Valid @RequestBody ChangePasswordRequest request){
+        UUID  userId = UUID.fromString(jwt.getSubject());
+        return userService.changePassword(userId, request);
     }
 
 

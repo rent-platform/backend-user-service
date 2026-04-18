@@ -27,18 +27,22 @@ public class SessionServiceImpl implements SessionService {
 
     @Override
     @Transactional
-    public String createSession(UUID userId, String deviceInfo) {
+    public String createSession(UUID userId, String deviceInfo, boolean rememberMe) {
         String refreshToken = jwtService.generateRefreshToken();
         String refreshTokenHash = hashToken(refreshToken);
 
         OffsetDateTime now = OffsetDateTime.now();
+
+        long refreshLifetime = rememberMe
+            ? jwtProperties.getRefreshTokenRememberMeExpirationSeconds()
+            : jwtProperties.getRefreshTokenShortExpirationSeconds();
 
         Session session = new Session();
         session.setUserId(userId);
         session.setRefreshTokenHash(refreshTokenHash);
         session.setDeviceInfo(deviceInfo);
         session.setCreatedAt(now);
-        session.setExpiresAt(now.plusSeconds(jwtProperties.getRefreshTokenExpirationSeconds()));
+        session.setExpiresAt(now.plusSeconds(refreshLifetime));
 
         sessionRepository.save(session);
 

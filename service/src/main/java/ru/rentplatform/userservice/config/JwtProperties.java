@@ -14,7 +14,9 @@ public class JwtProperties {
 
     private final long accessTokenExpirationSeconds;
 
-    private final long refreshTokenExpirationSeconds;
+    private final long refreshTokenShortExpirationSeconds;
+
+    private final long refreshTokenRememberMeExpirationSeconds;
 
     private final RSAPrivateKey privateKey;
 

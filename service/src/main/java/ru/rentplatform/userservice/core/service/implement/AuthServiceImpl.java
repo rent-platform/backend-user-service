@@ -69,10 +69,11 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidCredentialsException("Invalid login or password");
         }
 
+        boolean rememberMe = Boolean.TRUE.equals(request.getRememberMe());
         String normalizeDeviceInfo = normalizeDeviceInfo(deviceInfo);
 
         String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = sessionService.createSession(user.getId(), normalizeDeviceInfo);
+        String refreshToken = sessionService.createSession(user.getId(), normalizeDeviceInfo,rememberMe);
 
         OffsetDateTime now = OffsetDateTime.now();
 

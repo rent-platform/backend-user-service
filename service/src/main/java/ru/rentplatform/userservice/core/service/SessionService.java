@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public interface SessionService {
 
-    String createSession(UUID userId, String deviceInfo);
+    String createSession(UUID userId, String deviceInfo, boolean rememberMe);
 
     Session validateRefreshToken(String refreshToken);
 

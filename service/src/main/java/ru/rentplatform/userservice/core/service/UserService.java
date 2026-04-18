@@ -1,5 +1,6 @@
 package ru.rentplatform.userservice.core.service;
 
+import ru.rentplatform.userservice.api.dto.request.ChangePasswordRequest;
 import ru.rentplatform.userservice.api.dto.request.UpdateProfileRequest;
 import ru.rentplatform.userservice.api.dto.response.MessageResponse;
 import ru.rentplatform.userservice.api.dto.response.UserResponse;
@@ -15,4 +16,6 @@ public interface UserService {
     UserResponse updateCurrentUser(UUID userId, UpdateProfileRequest request);
 
     MessageResponse deleteCurrentUser(UUID userId);
+
+    MessageResponse changePassword(UUID userId, ChangePasswordRequest request);
 }

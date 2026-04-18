@@ -11,15 +11,15 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginRequest {
+public class ChangePasswordRequest {
 
     @NotBlank
-    @Size(max = 255)
-    private String login;
+    private String currentPassword;
 
     @NotBlank
     @Size(min = 8, max = 255)
-    private String password;
+    private String newPassword;
 
-    private Boolean rememberMe;
+    @NotBlank
+    private String confirmNewPassword;
 }
