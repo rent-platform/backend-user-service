@@ -11,7 +11,6 @@ import ru.rentplatform.userservice.api.dto.response.UserResponse;
 import ru.rentplatform.userservice.api.exception.AccessDeniedException;
 import ru.rentplatform.userservice.api.exception.EmailAlreadyExistsException;
 import ru.rentplatform.userservice.api.exception.InvalidCredentialsException;
-import ru.rentplatform.userservice.config.PasswordConfig;
 import ru.rentplatform.userservice.core.dao.entity.User;
 import ru.rentplatform.userservice.core.dao.repository.UserRepository;
 import ru.rentplatform.userservice.core.mapper.UserMapper;
