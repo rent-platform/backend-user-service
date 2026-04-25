@@ -29,7 +29,7 @@ app:
 
 security:
   jwt:
-    access-token-expiration-seconds: 900
+    access-token-expiration-seconds: 1200
     refresh-token-short-expiration-seconds: 86400
     refresh-token-remember-me-expiration-seconds: 2592000
       

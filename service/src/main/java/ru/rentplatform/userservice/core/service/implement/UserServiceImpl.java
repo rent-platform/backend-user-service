@@ -7,10 +7,12 @@ import org.springframework.stereotype.Service;
 import ru.rentplatform.userservice.api.dto.request.ChangePasswordRequest;
 import ru.rentplatform.userservice.api.dto.request.UpdateProfileRequest;
 import ru.rentplatform.userservice.api.dto.response.MessageResponse;
+import ru.rentplatform.userservice.api.dto.response.UserPublicResponse;
 import ru.rentplatform.userservice.api.dto.response.UserResponse;
 import ru.rentplatform.userservice.api.exception.AccessDeniedException;
 import ru.rentplatform.userservice.api.exception.EmailAlreadyExistsException;
 import ru.rentplatform.userservice.api.exception.InvalidCredentialsException;
+import ru.rentplatform.userservice.api.exception.UserNotFoundException;
 import ru.rentplatform.userservice.core.dao.entity.User;
 import ru.rentplatform.userservice.core.dao.repository.UserRepository;
 import ru.rentplatform.userservice.core.mapper.UserMapper;
@@ -124,6 +126,23 @@ public class UserServiceImpl implements UserService {
         return new MessageResponse("Password changed successfully. Please login again");
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserPublicResponse getPublicProfile(UUID userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException("User not found")
+                );
+
+        return UserPublicResponse.builder()
+                .id(user.getId())
+                .nickname(user.getNickname())
+                .avatarUrl(user.getAvatarUrl())
+                .rating(0.0)
+                .build();
+    }
 
     private String normalize(String value) {
         if (value == null) {
