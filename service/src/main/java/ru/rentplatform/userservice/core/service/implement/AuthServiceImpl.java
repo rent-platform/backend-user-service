@@ -40,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         OffsetDateTime now = OffsetDateTime.now();
+        String nickname = request.getNickname().trim();
 
         User user = new User();
         user.setNickname(request.getNickname());

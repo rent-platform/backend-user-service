@@ -32,8 +32,8 @@ public class RegisterRequest {
     @NotBlank
     @Size(min = 1, max = 50, message = "Nickname must be between 1 and 50 characters")
     @Pattern(
-            regexp = "^[A-Za-z0-9_\\-]+$",
-            message = "Nickname can contain only letters, digits, underscores and hyphens"
+            regexp = "^[A-Za-zА-Яа-яЁё0-9_-]+(?: [A-Za-zА-Яа-яЁё0-9_-]+)*$",
+            message = "Nickname can contain letters, digits, single spaces, underscores and hyphens"
     )
     private String nickname;
-}
+    }
