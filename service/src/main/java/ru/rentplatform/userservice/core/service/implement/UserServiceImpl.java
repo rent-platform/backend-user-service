@@ -54,6 +54,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new AccessDeniedException("Current user not found"));
 
         String fullName = normalize(request.getFullName());
+        String nickname = normalize(request.getNickname());
         String email = normalize(request.getEmail());
         String bio = normalize(request.getBio());
         String avatarUrl = normalize(request.getAvatarUrl());
@@ -70,6 +71,10 @@ public class UserServiceImpl implements UserService {
 
         if (fullName != null) {
             user.setFullName(fullName);
+        }
+
+        if (nickname != null) {
+            user.setNickname(nickname);
         }
 
         user.setBio(bio);

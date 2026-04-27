@@ -22,6 +22,13 @@ public class UpdateProfileRequest {
     )
     private String fullName;
 
+    @Size(min = 1, max = 50, message = "Nickname must be between 1 and 50 characters")
+    @Pattern(
+            regexp = "^[A-Za-zА-Яа-яЁё0-9_-]+(?: [A-Za-zА-Яа-яЁё0-9_-]+)*$",
+            message = "Nickname can contain letters, digits, single spaces, underscores and hyphens"
+    )
+    private String nickname;
+
     @Email(message = "Email must be valid and contain @")
     @Size(max = 255, message = "Email must be at most 255 characters")
     private String email;
