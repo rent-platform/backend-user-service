@@ -9,10 +9,7 @@ import ru.rentplatform.userservice.api.dto.request.UpdateProfileRequest;
 import ru.rentplatform.userservice.api.dto.response.MessageResponse;
 import ru.rentplatform.userservice.api.dto.response.UserPublicResponse;
 import ru.rentplatform.userservice.api.dto.response.UserResponse;
-import ru.rentplatform.userservice.api.exception.AccessDeniedException;
-import ru.rentplatform.userservice.api.exception.EmailAlreadyExistsException;
-import ru.rentplatform.userservice.api.exception.InvalidCredentialsException;
-import ru.rentplatform.userservice.api.exception.UserNotFoundException;
+import ru.rentplatform.userservice.api.exception.*;
 import ru.rentplatform.userservice.core.dao.entity.User;
 import ru.rentplatform.userservice.core.dao.repository.UserRepository;
 import ru.rentplatform.userservice.core.mapper.UserMapper;
@@ -73,7 +70,13 @@ public class UserServiceImpl implements UserService {
             user.setFullName(fullName);
         }
 
-        if (nickname != null) {
+        if (request.getNickname() != null) {
+            if (nickname != null) {
+                boolean nicknameBusy = userRepository.existsByNicknameAndDeletedAtIsNullAndIdNot(nickname, userId);
+                if (nicknameBusy) {
+                    throw new NicknameAlreadyExistsException("User with this nickname already exists");
+                }
+            }
             user.setNickname(nickname);
         }
 
