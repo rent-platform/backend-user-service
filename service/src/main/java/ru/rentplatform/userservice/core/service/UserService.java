@@ -21,4 +21,6 @@ public interface UserService {
     MessageResponse changePassword(UUID userId, ChangePasswordRequest request);
 
     UserPublicResponse getPublicProfile(UUID userId);
+
+    UserResponse updateUserRole(UUID currentUserId, String currentUserRole, UUID targetUserId, String newRole);
 }

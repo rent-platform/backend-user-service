@@ -18,7 +18,6 @@ public class SessionCleanupScheduler {
     private final SessionRepository sessionRepository;
     private final SessionCleanupProperties properties;
 
-    // каждые 30 минут
     @Scheduled(fixedDelayString = "${app.session.cleanup.delay-ms}")
     @Transactional
     public void cleanupSessions() {

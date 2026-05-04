@@ -1,5 +1,6 @@
 package ru.rentplatform.userservice.core.service.implement;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
@@ -152,6 +154,44 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public UserResponse updateUserRole(UUID currentUserId, String currentUserRole, UUID targetUserId, String newRole) {
+        if (currentUserId.equals(targetUserId)) {
+            throw new AccessDeniedException("Cannot change your own role");
+        }
+
+        User targetUser = userRepository.findByIdAndDeletedAtIsNull(targetUserId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        String oldRole = targetUser.getRole();
+
+        if (oldRole.equals(newRole)) {
+            throw new IllegalArgumentException("User " + targetUser.getNickname() + " already has role: " + oldRole);
+        }
+
+        int currentRank = getRoleRank(currentUserRole);
+        int targetRank = getRoleRank(oldRole);
+        int newRank = getRoleRank(newRole);
+
+        if (targetRank >= currentRank) {
+            throw new AccessDeniedException("Cannot change role of user with equal or higher rank");
+        }
+
+        if (newRank >= currentRank) {
+            throw new AccessDeniedException("Cannot assign role equal or higher than your own");
+        }
+
+        targetUser.setRole(newRole);
+        targetUser.setUpdatedAt(OffsetDateTime.now());
+
+        userRepository.save(targetUser);
+
+        log.info("User {} role changed from {} to {} by {}", targetUserId, oldRole, newRole, currentUserId);
+
+        return userMapper.toResponse(targetUser);
+    }
+
     private String normalize(String value) {
         if (value == null) {
             return null;
@@ -159,5 +199,15 @@ public class UserServiceImpl implements UserService {
 
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private int getRoleRank(String role) {
+        return switch (role) {
+            case "super_admin" -> 4;
+            case "admin" -> 3;
+            case "moderator" -> 2;
+            case "user" -> 1;
+            default -> 0;
+        };
     }
 }
