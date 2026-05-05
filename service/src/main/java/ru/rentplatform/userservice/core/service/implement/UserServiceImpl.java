@@ -196,6 +196,81 @@ public class UserServiceImpl implements UserService {
         return userMapper.toResponse(targetUser);
     }
 
+    @Override
+    @Transactional
+    public UserResponse blockUser(UUID currentUserId, String currentUserRole, UUID targetUserId, String reason) {
+        if (currentUserId.equals(targetUserId)) {
+            throw new AccessDeniedException("Cannot block yourself");
+        }
+
+        User targetUser = userRepository.findByIdAndDeletedAtIsNull(targetUserId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        if (!targetUser.getIsActive()) {
+            throw new IllegalArgumentException("User is already blocked");
+        }
+
+        int currentRank = getRoleRank(currentUserRole);
+        int targetRank = getRoleRank(targetUser.getRole());
+
+        if (targetRank >= currentRank) {
+            throw new AccessDeniedException("Cannot block user with equal or higher rank");
+        }
+
+        if ("super_admin".equals(targetUser.getRole())) {
+            throw new AccessDeniedException("Cannot block super_admin");
+        }
+
+        OffsetDateTime now = OffsetDateTime.now();
+        targetUser.setIsActive(false);
+        targetUser.setBlockedAt(now);
+        targetUser.setBlockedBy(currentUserId);
+        targetUser.setBlockedReason(reason);
+        targetUser.setUpdatedAt(now);
+
+        userRepository.save(targetUser);
+
+        sessionService.revokeAllUserSessions(targetUserId);
+
+        log.info("User {} blocked by {} with reason: {}", targetUserId, currentUserId, reason);
+
+        return userMapper.toResponse(targetUser);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse unblockUser(UUID currentUserId, String currentUserRole, UUID targetUserId) {
+        if (currentUserId.equals(targetUserId)) {
+            throw new AccessDeniedException("Cannot unblock yourself");
+        }
+
+        User targetUser = userRepository.findByIdAndDeletedAtIsNull(targetUserId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        if (targetUser.getIsActive()) {
+            throw new IllegalArgumentException("User is not blocked");
+        }
+
+        int currentRank = getRoleRank(currentUserRole);
+        int targetRank = getRoleRank(targetUser.getRole());
+
+        if (targetRank >= currentRank) {
+            throw new AccessDeniedException("Cannot unblock user with equal or higher rank");
+        }
+
+        targetUser.setIsActive(true);
+        targetUser.setBlockedAt(null);
+        targetUser.setBlockedBy(null);
+        targetUser.setBlockedReason(null);
+        targetUser.setUpdatedAt(OffsetDateTime.now());
+
+        userRepository.save(targetUser);
+
+        log.info("User {} unblocked by {}", targetUserId, currentUserId);
+
+        return userMapper.toResponse(targetUser);
+    }
+
     private String normalize(String value) {
         if (value == null) {
             return null;

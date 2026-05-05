@@ -61,4 +61,13 @@ public class User {
 
     @Column(name = "deleted_at")
     private OffsetDateTime deletedAt;
+
+    @Column(name = "blocked_at")
+    private OffsetDateTime blockedAt;
+
+    @Column(name = "blocked_by")
+    private UUID blockedBy;
+
+    @Column(name = "blocked_reason")
+    private String blockedReason;
 }

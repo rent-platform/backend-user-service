@@ -23,4 +23,8 @@ public interface UserService {
     UserPublicResponse getPublicProfile(UUID userId);
 
     UserResponse updateUserRole(UUID currentUserId, String currentUserRole, UUID targetUserId, String newRole);
+
+    UserResponse blockUser(UUID currentUserId, String currentUserRole, UUID targetUserId, String reason);
+
+    UserResponse unblockUser(UUID currentUserId, String currentUserRole, UUID targetUserId);
 }

@@ -63,7 +63,10 @@ public class AuthServiceImpl implements AuthService {
         User user = findUserByLogin(request.getLogin());
 
         if (!Boolean.TRUE.equals(user.getIsActive())) {
-            throw new InvalidCredentialsException("User account is inactive");
+            String msg = user.getBlockedReason() != null
+                    ? "Account blocked: " + user.getBlockedReason()
+                    : "User account is inactive";
+            throw new InvalidCredentialsException(msg);
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
