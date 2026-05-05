@@ -18,6 +18,7 @@ spring:
     locations: filesystem:database/migrations
 
 app:
+  deal-payment-service-url: http://localhost:8083
   session:
     cleanup:
       delay-ms: 600000

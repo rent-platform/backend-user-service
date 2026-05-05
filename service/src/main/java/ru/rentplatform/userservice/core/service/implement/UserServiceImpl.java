@@ -11,6 +11,7 @@ import ru.rentplatform.userservice.api.dto.response.MessageResponse;
 import ru.rentplatform.userservice.api.dto.response.UserPublicResponse;
 import ru.rentplatform.userservice.api.dto.response.UserResponse;
 import ru.rentplatform.userservice.api.exception.*;
+import ru.rentplatform.userservice.client.DealPaymentClient;
 import ru.rentplatform.userservice.core.dao.entity.User;
 import ru.rentplatform.userservice.core.dao.repository.UserRepository;
 import ru.rentplatform.userservice.core.mapper.UserMapper;
@@ -29,6 +30,7 @@ public class UserServiceImpl implements UserService {
     private final SessionService sessionService;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final DealPaymentClient dealPaymentClient;
 
     @Override
     public UserResponse getById(UUID id) {
@@ -146,11 +148,13 @@ public class UserServiceImpl implements UserService {
                         () -> new UserNotFoundException("User not found")
                 );
 
+        Double rating = dealPaymentClient.getUserOverallRating(userId);
+
         return UserPublicResponse.builder()
                 .id(user.getId())
                 .nickname(user.getNickname())
                 .avatarUrl(user.getAvatarUrl())
-                .rating(0.0)
+                .overallRating(rating)
                 .build();
     }
 

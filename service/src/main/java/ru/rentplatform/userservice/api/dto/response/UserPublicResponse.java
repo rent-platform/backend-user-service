@@ -17,5 +17,5 @@ public class UserPublicResponse {
 
     private String avatarUrl;
 
-    private Double rating;
+    private Double overallRating;
 }
