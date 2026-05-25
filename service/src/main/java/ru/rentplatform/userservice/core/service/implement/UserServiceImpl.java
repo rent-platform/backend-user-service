@@ -12,6 +12,7 @@ import ru.rentplatform.userservice.api.dto.response.UserPublicResponse;
 import ru.rentplatform.userservice.api.dto.response.UserResponse;
 import ru.rentplatform.userservice.api.exception.*;
 import ru.rentplatform.userservice.client.DealPaymentClient;
+import ru.rentplatform.userservice.client.audit.AuditClient;
 import ru.rentplatform.userservice.core.dao.entity.User;
 import ru.rentplatform.userservice.core.dao.repository.UserRepository;
 import ru.rentplatform.userservice.core.mapper.UserMapper;
@@ -31,6 +32,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final DealPaymentClient dealPaymentClient;
+    private final AuditClient auditClient;
 
     @Override
     public UserResponse getById(UUID id) {
@@ -193,6 +195,10 @@ public class UserServiceImpl implements UserService {
 
         log.info("User {} role changed from {} to {} by {}", targetUserId, oldRole, newRole, currentUserId);
 
+        auditClient.sendLog("user-service", currentUserId, "admin",
+                "CHANGE_ROLE", "USER", targetUserId.toString(),
+                "{\"newRole\": \"" + newRole + "\"}");
+
         return userMapper.toResponse(targetUser);
     }
 
@@ -234,6 +240,10 @@ public class UserServiceImpl implements UserService {
 
         log.info("User {} blocked by {} with reason: {}", targetUserId, currentUserId, reason);
 
+        auditClient.sendLog("user-service", currentUserId, "moderator",
+                "BLOCK_USER", "USER", targetUserId.toString(),
+                "{\"reason\": \"" + reason + "\"}");
+
         return userMapper.toResponse(targetUser);
     }
 
@@ -267,6 +277,9 @@ public class UserServiceImpl implements UserService {
         userRepository.save(targetUser);
 
         log.info("User {} unblocked by {}", targetUserId, currentUserId);
+
+        auditClient.sendLog("user-service", currentUserId, "moderator",
+                "UNBLOCK_USER", "USER", targetUserId.toString(), null);
 
         return userMapper.toResponse(targetUser);
     }

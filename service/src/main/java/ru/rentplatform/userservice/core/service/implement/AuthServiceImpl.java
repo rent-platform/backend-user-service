@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.rentplatform.userservice.api.dto.request.*;
 import ru.rentplatform.userservice.api.dto.response.*;
 import ru.rentplatform.userservice.api.exception.*;
+import ru.rentplatform.userservice.client.audit.AuditClient;
 import ru.rentplatform.userservice.core.dao.entity.Session;
 import ru.rentplatform.userservice.core.dao.entity.User;
 import ru.rentplatform.userservice.core.dao.repository.UserRepository;
@@ -27,6 +28,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserMapper userMapper;
+    private final AuditClient auditClient;
 
     @Override
     @Transactional
@@ -53,6 +55,10 @@ public class AuthServiceImpl implements AuthService {
         user.setUpdatedAt(now);
 
         User savedUser = userRepository.save(user);
+
+        auditClient.sendLog("user-service", savedUser.getId(), savedUser.getNickname(),
+                "REGISTER", "USER", savedUser.getId().toString(), null);
+
         return userMapper.toResponse(savedUser);
     }
 
@@ -84,6 +90,9 @@ public class AuthServiceImpl implements AuthService {
         user.setLastLoginAt(now);
         user.setUpdatedAt(now);
         userRepository.save(user);
+
+        auditClient.sendLog("user-service", user.getId(), user.getNickname(),
+                "LOGIN", "USER", user.getId().toString(), null);
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
